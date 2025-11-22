@@ -15,6 +15,15 @@ public class UnitOfWork : IUnitOfWork
 
     public async Task SaveChangesAsync()
     {
+        /*var measurementUnits = _appContext.ChangeTracker
+            .Entries<MeasurementUnit>()
+            .Where(e => e.State == EntityState.Added);
+        
+        foreach (var measurementUnit in measurementUnits)
+        {
+            measurementUnit.State = EntityState.Unchanged;
+        }*/
+
         var createdProducts = _appContext.ChangeTracker
             .Entries<Product>()
             .Where(e => e.State == EntityState.Added);

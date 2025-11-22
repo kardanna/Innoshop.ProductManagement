@@ -13,6 +13,10 @@ public class ApplicationContext : DbContext
     public ApplicationContext(DbContextOptions<ApplicationContext> options)
         : base(options)
     {
+        foreach (var unit in MeasurementUnit.GetValues())
+        {
+            this.Attach(unit);
+        }
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

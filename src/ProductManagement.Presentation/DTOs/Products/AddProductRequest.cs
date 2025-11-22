@@ -1,4 +1,4 @@
-namespace ProductManagement.Presentation.DTOs;
+namespace ProductManagement.Presentation.DTOs.Products;
 
 public class AddProductRequest
 {

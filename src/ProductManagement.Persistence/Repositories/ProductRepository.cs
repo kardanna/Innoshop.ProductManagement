@@ -19,7 +19,6 @@ public class ProductRepository : IProductRepository
 
     public void Add(Product product)
     {
-        _appContext.Attach(product.MeasurementUnit);
         _appContext.Products.Add(product);
     }
 
@@ -28,6 +27,7 @@ public class ProductRepository : IProductRepository
         return await _appContext.Products
             .Include(p => p.MeasurementUnit)
             .Include(p => p.InventoryRecords)
+            .Include(p => p.Owner)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 

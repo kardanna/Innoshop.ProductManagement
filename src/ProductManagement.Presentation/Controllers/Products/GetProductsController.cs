@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.Products.Get;
 using ProductManagement.Application.UseCases.Products.GetAll;
 
-namespace ProductManagement.Presentation.Controllers;
+namespace ProductManagement.Presentation.Controllers.Products;
 
 [Route("products")]
 public class GetProductsController : BaseApiController

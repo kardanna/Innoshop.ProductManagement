@@ -6,11 +6,11 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.Products.Add;
 using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
-using ProductManagement.Presentation.DTOs;
+using ProductManagement.Presentation.DTOs.Products;
 
-namespace ProductManagement.Presentation.Controllers;
+namespace ProductManagement.Presentation.Controllers.Products;
 
-[Route("product")]
+[Route("products")]
 public class AddProductController : BaseApiController
 {
     private readonly ILogger<AddProductController> _logger;
@@ -23,7 +23,7 @@ public class AddProductController : BaseApiController
         _logger = logger;
     }
 
-    [HttpGet]
+    [HttpGet("test")]
     [Authorize]
     public async Task<IActionResult> TestAuthentication()
     {
@@ -54,13 +54,11 @@ public class AddProductController : BaseApiController
 
         if (response.IsFailure) return HandleFailure(response);
 
-        return Ok(response.Value);
-
-        /*return CreatedAtAction(
-            actionName: nameof(GetUserController.GetById),
-            controllerName: nameof(GetUserController).Replace("Controller", ""),
+        return CreatedAtAction(
+            actionName: nameof(GetProductsController.GetById),
+            controllerName: nameof(GetProductsController).Replace("Controller", ""),
             routeValues: new { id = response.Value.Id } ,
             value: response.Value
-        );*/
+        );
     }
 }

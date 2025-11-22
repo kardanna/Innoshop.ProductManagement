@@ -34,7 +34,7 @@ public class ProductService : IProductService
         {
             Name = context.Name,
             Description = context.Description,
-            MeasurementUnit = context.MeasurementUnit,
+            MeasurementUnitId = context.MeasurementUnit.Id,
             Owner = context.Owner
         };
 
@@ -65,5 +65,48 @@ public class ProductService : IProductService
         var allowedProducts = products.Where(_productPolicy.GetIsProductRetrievalAllowedPredicate(requesterId));
 
         return allowedProducts.ToList();
+    }
+
+    public async Task<Result<Product>> AddInventoryRecordAsync(AddProductInventoryContext context)
+    {
+        var product = await GetAsync(context.ProductId, context.RequesterId);
+
+        if (product.IsFailure) return product.Error;
+
+        var attempt = await _productPolicy.IsAddingInventoryRecordAllowedAsync(product, context);
+
+        if (attempt.IsDenied) return attempt.Error;
+
+        var inventoryRecord = new InventoryRecord()
+        {
+            ProductId = context.ProductId,
+            UnitPrice = context.Price,
+            Quantity = context.Quantity
+        };
+
+        product.Value.InventoryRecords.Add(inventoryRecord);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return product;
+    }
+
+    public async Task<Result<Product>> UpdateAsync(UpdateProductContext context)
+    {
+        var product = await GetAsync(context.ProductId, context.RequesterId);
+
+        if (product.IsFailure) return product.Error;
+
+        var attempt = await _productPolicy.IsUpdateAllowedAsync(product, context);
+
+        if (attempt.IsDenied) return attempt.Error;
+
+        product.Value.Name = context.Name;
+        product.Value.Description = context.Description;
+        product.Value.MeasurementUnitId = context.MeasurementUnit.Id;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return product;
     }
 }

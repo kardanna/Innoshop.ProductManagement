@@ -44,5 +44,10 @@ public static class DomainErrors
             "Authentication.InvalidJwtIdClaim",
             "Token has no token ID claim or claim value is invalid."
         );
+
+        public static readonly Error Unauthorized = new(
+            "Authentication.Unauthorized",
+            "The user is unauthorized to perform the action."
+        );
     }
 }

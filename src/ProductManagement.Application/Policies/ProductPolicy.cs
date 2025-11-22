@@ -38,4 +38,22 @@ public class ProductPolicy : IProductPolicy
 
         return predicate;
     }
+
+    public async Task<PolicyResult> IsAddingInventoryRecordAllowedAsync(Product product, AddProductInventoryContext context)
+    {
+        if (product.OwnerId != context.RequesterId) return DomainErrors.Authentication.Unauthorized;
+        
+        if (product.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
+
+        return PolicyResult.Success;
+    }
+
+    public async Task<PolicyResult> IsUpdateAllowedAsync(Product product, UpdateProductContext context)
+    {
+        if (product.OwnerId != context.RequesterId) return DomainErrors.Authentication.Unauthorized;
+
+        if (product.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
+
+        return PolicyResult.Success;
+    }
 }
