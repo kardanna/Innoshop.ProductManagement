@@ -40,9 +40,26 @@ public class ProductOwnerService : IProductOwnerService
 
         if (owner.IsFailure) return owner;
 
-        owner.Value.IsDeactivated = true;
+        if (!owner.Value.IsDeactivated)
+        {
+            owner.Value.IsDeactivated = true;
+            await _unitOfWork.SaveChangesAsync();
+        }
 
-        await _unitOfWork.SaveChangesAsync();
+        return Result.Success();
+    }
+
+    public async Task<Result> ReactivateProductOwnerAsync(Guid ownerId)
+    {
+        var owner = await GetOrCreateProductOwnerAsync(ownerId);
+
+        if (owner.IsFailure) return owner;
+
+        if (owner.Value.IsDeactivated)
+        {
+            owner.Value.IsDeactivated = false;
+            await _unitOfWork.SaveChangesAsync();
+        }
 
         return Result.Success();
     }
@@ -53,11 +70,12 @@ public class ProductOwnerService : IProductOwnerService
 
         if (owner.IsFailure) return owner;
 
-        owner.Value.IsDeleted = true;
-
-        //DELETE ALL USER's DATA????
-
-        await _unitOfWork.SaveChangesAsync();
+        if (!owner.Value.IsDeleted)
+        {
+            owner.Value.IsDeleted = true;
+            await _unitOfWork.SaveChangesAsync();
+            //delete all products, etc.????
+        }
 
         return Result.Success();
     }

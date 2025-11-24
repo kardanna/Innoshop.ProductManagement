@@ -7,5 +7,6 @@ public interface IProductOwnerService
 {
     Task<Result<ProductOwner>> GetOrCreateProductOwnerAsync(Guid ownerId);
     Task<Result> DeactivateProductOwnerAsync(Guid ownerId);
+    Task<Result> ReactivateProductOwnerAsync(Guid ownerId);
     Task<Result> DeleteProductOwnerAsync(Guid ownerId);
 }

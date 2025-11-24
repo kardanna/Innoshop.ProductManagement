@@ -28,6 +28,7 @@ public class ProductRepository : IProductRepository
             .Include(p => p.MeasurementUnit)
             .Include(p => p.InventoryRecords)
             .Include(p => p.Owner)
+            .Where(p => !p.Owner.IsDeleted) //filter out as there is no requirements on wether records should be preserved upon user deletion 
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -40,7 +41,7 @@ public class ProductRepository : IProductRepository
             .Include(p => p.MeasurementUnit)
             .Include(p => p.InventoryRecords)
             .Include(p => p.Owner)
-            //.Where(p => !p.Owner.IsDeleted) //what to do with deleted users????
+            .Where(p => !p.Owner.IsDeleted) //same as before
             .AsExpandableEFCore();
         
         if (filteringPredicate is not null) products = products.Where(filteringPredicate);

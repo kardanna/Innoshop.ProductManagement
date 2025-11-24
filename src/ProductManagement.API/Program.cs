@@ -8,6 +8,8 @@ using ProductManagement.Application.Interfaces;
 using ProductManagement.Application.Policies;
 using ProductManagement.Application.Repositories;
 using ProductManagement.Application.Services;
+using ProductManagement.Infrastructure.Messaging;
+using ProductManagement.Infrastructure.Messaging.Abstractions;
 using ProductManagement.Persistence;
 using ProductManagement.Persistence.Repositories;
 using Serilog;
@@ -54,10 +56,14 @@ public class Program
         //Configure options
         builder.Services.ConfigureOptions<JwtOptionsSetup>();
         builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
 
         //Hosted services
 
         //RabbitMQ
+        builder.Services.AddSingleton<IExchangeChannel, RabbitMQChannel>();
+        builder.Services.AddHostedService<ExchangeChannelInitializer>();
+        builder.Services.AddHostedService<InnoshopNotificationListener>();
 
         //Authentication configuration
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

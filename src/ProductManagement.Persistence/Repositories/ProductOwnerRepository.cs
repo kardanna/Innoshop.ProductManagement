@@ -20,6 +20,7 @@ public class ProductOwnerRepository : IProductOwnerRepository
 
     public async Task<ProductOwner?> GetAsync(Guid id)
     {
-        return await _appContext.ProductOwners.FirstOrDefaultAsync(o => o.Id == id); 
+        return await _appContext.ProductOwners
+            .FirstOrDefaultAsync(o => o.Id == id); 
     }
 }

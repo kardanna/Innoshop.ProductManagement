@@ -109,4 +109,21 @@ public class ProductService : IProductService
 
         return product;
     }
+
+    public async Task<Result> DeleteAsync(Guid productId, Guid requesterId)
+    {
+        var product = await GetAsync(productId, requesterId);
+
+        if (product.IsFailure) return Result.Failure(product.Error);
+
+        var attempt = await _productPolicy.IsDeleteAllowedAsync(product, requesterId);
+
+        if (attempt.IsDenied) return Result.Failure(attempt.Error);
+
+        _productRepository.Remove(product);
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return Result.Success();
+    }
 }

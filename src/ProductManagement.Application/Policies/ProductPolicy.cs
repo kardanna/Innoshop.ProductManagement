@@ -23,7 +23,7 @@ public class ProductPolicy : IProductPolicy
 
         if (product.Owner.IsDeactivated && !theRequesterIsTheProductOwner) return DomainErrors.Product.NotFound;
 
-        if (product.Owner.IsDeleted) return DomainErrors.Product.NotFound; //Remove. Just delete the products? 
+        //if (product.Owner.IsDeleted) return DomainErrors.Product.NotFound; //repository ensures no products by deleted users will be retrieved
 
         return PolicyResult.Success;
     }
@@ -45,6 +45,8 @@ public class ProductPolicy : IProductPolicy
         
         if (product.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
 
+        if (product.Owner.IsDeleted) return DomainErrors.ProductOwner.Deleted;
+
         return PolicyResult.Success;
     }
 
@@ -53,6 +55,15 @@ public class ProductPolicy : IProductPolicy
         if (product.OwnerId != context.RequesterId) return DomainErrors.Authentication.Unauthorized;
 
         if (product.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
+
+        if (product.Owner.IsDeleted) return DomainErrors.ProductOwner.Deleted;
+
+        return PolicyResult.Success;
+    }
+
+    public async Task<PolicyResult> IsDeleteAllowedAsync(Product product, Guid requesterId)
+    {
+        if (product.OwnerId != requesterId) return DomainErrors.Authentication.Unauthorized;
 
         return PolicyResult.Success;
     }

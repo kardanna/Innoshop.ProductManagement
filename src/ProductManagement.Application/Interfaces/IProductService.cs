@@ -12,4 +12,5 @@ public interface IProductService
     Task<Result<IEnumerable<Product>>> GetAllAsync(GetAllProductsQueryParameters? queryParameters, Guid? requesterId);
     Task<Result<Product>> AddInventoryRecordAsync(AddProductInventoryContext context);
     Task<Result<Product>> UpdateAsync(UpdateProductContext context);
+    Task<Result> DeleteAsync(Guid productId, Guid requesterId);
 }
