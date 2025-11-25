@@ -56,15 +56,17 @@ public class Program
         //Configure options
         builder.Services.ConfigureOptions<JwtOptionsSetup>();
         builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
-        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
 
         //Hosted services
 
         //RabbitMQ
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
         builder.Services.AddSingleton<RabbitMQConnectionProvider>();
         builder.Services.AddSingleton<IRabbitMQConnectionProvider>(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
         builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
-        builder.Services.AddHostedService<RabbitMQConfigurator>();
+        builder.Services.AddSingleton<RabbitMQConfigurator>();
+        builder.Services.AddSingleton<IRabbitMQConfigurator>(sp => sp.GetRequiredService<RabbitMQConfigurator>());
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConfigurator>());
         builder.Services.AddHostedService<RabbitMQConsumer>();
 
         //Authentication configuration

@@ -1,4 +1,5 @@
-using Innoshop.Contracts.UserManagement;
+using System.Collections.ObjectModel;
+using Innoshop.Contracts.UserManagement.UserEvents;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ProductManagement.Infrastructure.Messaging.Abstractions;
@@ -6,10 +7,13 @@ using RabbitMQ.Client;
 
 namespace ProductManagement.Infrastructure.Messaging;
 
-public class RabbitMQConfigurator : IHostedService
+public class RabbitMQConfigurator : IRabbitMQConfigurator, IHostedService
 {
+    private const string QueueNamePrefix = "Innoshop.ProductManagement";
     private readonly IRabbitMQConnectionProvider _connectionProvider;
     private readonly ILogger<RabbitMQConfigurator> _logger;
+    private readonly TaskCompletionSource _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly Dictionary<string, string> _declaredQueueNames = new();
 
     public RabbitMQConfigurator(
         IRabbitMQConnectionProvider connectionProvider,
@@ -17,6 +21,13 @@ public class RabbitMQConfigurator : IHostedService
     {
         _connectionProvider = connectionProvider;
         _logger = logger;
+    }
+
+    public ReadOnlyDictionary<string, string> DeclaredQueueNames { get; private set; } = null!;
+
+    public Task Configure(CancellationToken cancellationToken)
+    {
+        return _tcs.Task.WaitAsync(cancellationToken);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -27,11 +38,11 @@ public class RabbitMQConfigurator : IHostedService
         var connection = await _connectionProvider.GetConnectionAsync(cancellationToken);
         _logger.LogInformation("Successfully fetched RabbitMQ connection.");
 
-        _logger.LogInformation("Creating RabbitMQ connection...");
-        using var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
-        _logger.LogInformation("Successfully created RabbitMQ connection.");
+        _logger.LogInformation("Creating RabbitMQ channel...");
+        var channel = await connection.CreateChannelAsync(cancellationToken: cancellationToken);
+        _logger.LogInformation("Successfully created RabbitMQ channel.");
 
-        var exchangeName = Innoshop.Contracts.UserManagement.Exchange.Name;
+        var exchangeName = Innoshop.Contracts.UserManagement.UserEvents.Exchange.Name;
        
         _logger.LogInformation("Declaring '{ExchangeName}' exchange...", exchangeName);
         await channel.ExchangeDeclareAsync(
@@ -41,11 +52,16 @@ public class RabbitMQConfigurator : IHostedService
         );
         _logger.LogInformation("Successfully declared '{ExchangeName}' exchange.", exchangeName);
         
-        await DeclareAndBindQueueAsync(channel, UserDeactivatedMessage.RoutingKey, exchangeName, cancellationToken);
+        await DeclareAndBindQueueAsync(channel, UserDeactivatedMessage.Topic, exchangeName, cancellationToken);
 
-        await DeclareAndBindQueueAsync(channel, UserReactivatedMessage.RoutingKey, exchangeName, cancellationToken);
+        await DeclareAndBindQueueAsync(channel, UserReactivatedMessage.Topic, exchangeName, cancellationToken);
 
-        await DeclareAndBindQueueAsync(channel, UserDeletedMessage.RoutingKey, exchangeName, cancellationToken);
+        await DeclareAndBindQueueAsync(channel, UserDeletedMessage.Topic, exchangeName, cancellationToken);
+
+        await channel.CloseAsync(cancellationToken);
+
+        DeclaredQueueNames = new(_declaredQueueNames);
+        _tcs.TrySetResult();
 
         _logger.LogInformation("Successfully configured RabbitMQ exchange and queues...");
     }
@@ -65,7 +81,7 @@ public class RabbitMQConfigurator : IHostedService
         
         var queue = await channel.QueueDeclareAsync
         (
-            queue: QueueNames.Names[topicName],
+            queue: $"{QueueNamePrefix}.{topicName}",
             durable: true,
             exclusive: true,
             autoDelete: false,
@@ -89,5 +105,7 @@ public class RabbitMQConfigurator : IHostedService
 
         _logger.LogInformation("Successfully binded '{QueueName}' queue to '{ExchangeName}' exchange.",
             queue.QueueName, exchangeName);
+
+        _declaredQueueNames.Add(topicName, queue.QueueName);
     }
 }

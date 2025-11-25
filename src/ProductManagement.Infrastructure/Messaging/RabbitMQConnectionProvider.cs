@@ -37,8 +37,10 @@ public class RabbitMQConnectionProvider : IRabbitMQConnectionProvider, IHostedSe
         };
 
         _logger.LogInformation($"Establishing a RabbitMQ connection...");
+        
         _connection = await factory.CreateConnectionAsync(cancellationToken);
         _tcs.TrySetResult(_connection);
+        
         _logger.LogInformation($"Successfully established RabbitMQ connection.");
     }
 
