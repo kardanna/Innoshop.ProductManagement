@@ -61,9 +61,11 @@ public class Program
         //Hosted services
 
         //RabbitMQ
-        builder.Services.AddSingleton<IExchangeChannel, RabbitMQChannel>();
-        builder.Services.AddHostedService<ExchangeChannelInitializer>();
-        builder.Services.AddHostedService<InnoshopNotificationListener>();
+        builder.Services.AddSingleton<RabbitMQConnectionProvider>();
+        builder.Services.AddSingleton<IRabbitMQConnectionProvider>(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
+        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
+        builder.Services.AddHostedService<RabbitMQConfigurator>();
+        builder.Services.AddHostedService<RabbitMQConsumer>();
 
         //Authentication configuration
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

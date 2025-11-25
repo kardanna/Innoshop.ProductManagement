@@ -1,6 +1,7 @@
 using ProductManagement.Application.Interfaces;
 using ProductManagement.Application.Repositories;
 using ProductManagement.Domain.Entities;
+using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 
 namespace ProductManagement.Application.Services;
@@ -40,6 +41,8 @@ public class ProductOwnerService : IProductOwnerService
 
         if (owner.IsFailure) return owner;
 
+        if (owner.Value.IsDeleted) return Result.Failure(DomainErrors.ProductOwner.Deleted);
+
         if (!owner.Value.IsDeactivated)
         {
             owner.Value.IsDeactivated = true;
@@ -54,6 +57,8 @@ public class ProductOwnerService : IProductOwnerService
         var owner = await GetOrCreateProductOwnerAsync(ownerId);
 
         if (owner.IsFailure) return owner;
+
+        if (owner.Value.IsDeleted) return Result.Failure(DomainErrors.ProductOwner.Deleted);
 
         if (owner.Value.IsDeactivated)
         {
