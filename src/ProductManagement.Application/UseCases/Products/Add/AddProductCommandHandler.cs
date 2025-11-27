@@ -2,8 +2,6 @@ using ProductManagement.Application.Contexts;
 using ProductManagement.Application.Interfaces;
 using ProductManagement.Application.Messaging;
 using ProductManagement.Application.UseCases.Products.Get;
-using ProductManagement.Domain.Entities;
-using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 
 namespace ProductManagement.Application.UseCases.Products.Add;
@@ -12,13 +10,16 @@ public class AddProductCommandHandler : ICommandHandler<AddProductCommand, GetPr
 {
     private readonly IProductOwnerService _ownerService;
     private readonly IProductService _productServcie;
+    private readonly IUnitOfWork _unitOfWork;
 
     public AddProductCommandHandler(
         IProductOwnerService ownerService,
-        IProductService productServcie)
+        IProductService productServcie,
+        IUnitOfWork unitOfWork)
     {
         _ownerService = ownerService;
         _productServcie = productServcie;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<GetProductResponse>> Handle(AddProductCommand request, CancellationToken cancellationToken)
@@ -27,20 +28,18 @@ public class AddProductCommandHandler : ICommandHandler<AddProductCommand, GetPr
 
         if (owner.IsFailure) return owner.Error;
 
-        var unit = MeasurementUnit.GetByName(request.MeasurementUnit);
-
-        if (unit is null) return DomainErrors.MeasurementUnit.UnknownUnit;
-
         var context = new AddProductContext(
             owner: owner,
             name: request.Name,
             description: request.Description,
-            measurementUnit: unit
+            measurementUnit: request.MeasurementUnit
         );
 
         var product = await _productServcie.AddAsync(context);
 
         if (product.IsFailure) return product.Error;
+
+        await _unitOfWork.SaveChangesAsync();
 
         var response = new GetProductResponse(product);
 

@@ -7,16 +7,24 @@ namespace ProductManagement.Application.UseCases.Products.Delete;
 public class DeleteProductCommandHandler : ICommandHandler<DeleteProductCommand>
 {
     private readonly IProductService _productService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public DeleteProductCommandHandler(IProductService productService)
+    public DeleteProductCommandHandler(
+        IProductService productService,
+        IUnitOfWork unitOfWork)
     {
         _productService = productService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
-        var response = await _productService.DeleteAsync(request.ProductId, request.RequesterId);
+        var result = await _productService.DeleteAsync(request.ProductId, request.RequesterId);
 
-        return response;
+        if (result.IsFailure) return result;
+
+        await _unitOfWork.SaveChangesAsync();
+
+        return result;
     }
 }

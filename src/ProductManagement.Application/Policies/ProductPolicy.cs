@@ -8,7 +8,7 @@ namespace ProductManagement.Application.Policies;
 
 public class ProductPolicy : IProductPolicy
 {
-    public async Task<PolicyResult> IsAddingAllowedAsync(AddProductContext context)
+    public async Task<PolicyResult> IsCreationAllowedAsync(AddProductContext context)
     {
         if (context.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
 
@@ -19,11 +19,11 @@ public class ProductPolicy : IProductPolicy
 
     public async Task<PolicyResult> IsRetrievalAllowedAsync(Product product, Guid? requesterId = null)
     {
+        //repository ensures no products by deleted users will be retrieved
+
         var theRequesterIsTheProductOwner = product.OwnerId == requesterId;
 
         if (product.Owner.IsDeactivated && !theRequesterIsTheProductOwner) return DomainErrors.Product.NotFound;
-
-        //if (product.Owner.IsDeleted) return DomainErrors.Product.NotFound; //repository ensures no products by deleted users will be retrieved
 
         return PolicyResult.Success;
     }
@@ -33,13 +33,13 @@ public class ProductPolicy : IProductPolicy
         var predicate = (Product p) =>
         {
             var theRequesterIsTheProductOwner = p.OwnerId == requesterId;
-            return !p.Owner.IsDeactivated || p.Owner.IsDeactivated && theRequesterIsTheProductOwner;// || p.Owner.IsDeleted;
+            return !p.Owner.IsDeactivated || p.Owner.IsDeactivated && theRequesterIsTheProductOwner;
         };
 
         return predicate;
     }
 
-    public async Task<PolicyResult> IsAddingInventoryRecordAllowedAsync(Product product, AddProductInventoryContext context)
+    public async Task<PolicyResult> IsInventoryRecordCreationAllowedAsync(Product product, AddProductInventoryContext context)
     {
         if (product.OwnerId != context.RequesterId) return DomainErrors.Authentication.Unauthorized;
         

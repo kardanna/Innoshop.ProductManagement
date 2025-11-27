@@ -28,7 +28,7 @@ public class ProductRepository : IProductRepository
             .Include(p => p.MeasurementUnit)
             .Include(p => p.InventoryRecords)
             .Include(p => p.Owner)
-            .Where(p => !p.Owner.IsDeleted) //filter out as there is no requirements on wether records should be preserved upon user deletion 
+            .Where(p => !p.Owner.IsDeleted) //filtering out (no requirements)
             .FirstOrDefaultAsync(p => p.Id == id);
     }
 
@@ -46,6 +46,8 @@ public class ProductRepository : IProductRepository
         
         if (filteringPredicate is not null) products = products.Where(filteringPredicate);
         if (orderingDelegate is not null) products = orderingDelegate(products);
+
+        //ADD PAGINATION!!!!!!
 
         return await products.ToListAsync();
     }

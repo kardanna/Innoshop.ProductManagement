@@ -7,13 +7,13 @@ public class AddProductContext
     public ProductOwner Owner { get; init; }
     public string Name { get; init; }
     public string Description { get; init; }
-    public MeasurementUnit MeasurementUnit { get; init; }
+    public string MeasurementUnit { get; init; }
 
     public AddProductContext(
         ProductOwner owner,
         string name,
         string description,
-        MeasurementUnit measurementUnit)
+        string measurementUnit)
     {
         Owner = owner;
         Name = name;

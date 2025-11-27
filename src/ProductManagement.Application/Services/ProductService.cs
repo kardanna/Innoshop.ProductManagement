@@ -26,21 +26,23 @@ public class ProductService : IProductService
 
     public async Task<Result<Product>> AddAsync(AddProductContext context)
     {
-        var attempt = await _productPolicy.IsAddingAllowedAsync(context);
+        var attempt = await _productPolicy.IsCreationAllowedAsync(context);
 
         if (attempt.IsDenied) return attempt.Error;
+
+        var unit = MeasurementUnit.GetByName(context.MeasurementUnit);
+
+        if (unit is null) return DomainErrors.MeasurementUnit.UnknownUnit;
 
         var product = new Product()
         {
             Name = context.Name,
             Description = context.Description,
-            MeasurementUnitId = context.MeasurementUnit.Id,
+            MeasurementUnitId = unit.Id,
             Owner = context.Owner
         };
 
         _productRepository.Add(product);
-
-        await _unitOfWork.SaveChangesAsync();
 
         return product;
     }
@@ -62,6 +64,7 @@ public class ProductService : IProductService
     {
         var products = await _productRepository.GetAllAsync(queryParameters);
 
+        //TODO: move filter to DB side!!!!!
         var allowedProducts = products.Where(_productPolicy.GetIsProductRetrievalAllowedPredicate(requesterId));
 
         return allowedProducts.ToList();
@@ -73,7 +76,7 @@ public class ProductService : IProductService
 
         if (product.IsFailure) return product.Error;
 
-        var attempt = await _productPolicy.IsAddingInventoryRecordAllowedAsync(product, context);
+        var attempt = await _productPolicy.IsInventoryRecordCreationAllowedAsync(product, context);
 
         if (attempt.IsDenied) return attempt.Error;
 
@@ -86,13 +89,15 @@ public class ProductService : IProductService
 
         product.Value.InventoryRecords.Add(inventoryRecord);
 
-        await _unitOfWork.SaveChangesAsync();
-
         return product;
     }
 
     public async Task<Result<Product>> UpdateAsync(UpdateProductContext context)
     {
+        var unit = MeasurementUnit.GetByName(context.MeasurementUnit);
+
+        if (unit is null) return DomainErrors.MeasurementUnit.UnknownUnit;
+
         var product = await GetAsync(context.ProductId, context.RequesterId);
 
         if (product.IsFailure) return product.Error;
@@ -103,9 +108,7 @@ public class ProductService : IProductService
 
         product.Value.Name = context.Name;
         product.Value.Description = context.Description;
-        product.Value.MeasurementUnitId = context.MeasurementUnit.Id;
-
-        await _unitOfWork.SaveChangesAsync();
+        product.Value.MeasurementUnitId = unit.Id;
 
         return product;
     }
@@ -121,8 +124,6 @@ public class ProductService : IProductService
         if (attempt.IsDenied) return Result.Failure(attempt.Error);
 
         _productRepository.Remove(product);
-
-        await _unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }

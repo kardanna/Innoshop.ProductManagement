@@ -8,4 +8,5 @@ public class GetAllProductsQueryParameters
     public OrderDirection? OrderDirection { get; set; }
     public string? NameContains { get; set; }
     public string? DescriptionContains { get; set; }
+    //ADD PAGINATION!!!!!!!!!!!!!!!
 }

@@ -25,14 +25,17 @@ public class ProductOwnerService : IProductOwnerService
 
         if (owner is not null) return owner;
 
-        return new ProductOwner()
+        owner = new ProductOwner()
         {
             Id = ownerId,
             IsDeactivated = false,
             IsDeleted = false
         };
 
-        //save changes???
+        _productOwnerRepository.Add(owner);
+        //Save is at handlers side
+
+        return owner;
     }
 
     public async Task<Result> DeactivateProductOwnerAsync(Guid ownerId)

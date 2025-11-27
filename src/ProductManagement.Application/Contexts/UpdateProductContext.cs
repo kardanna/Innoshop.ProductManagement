@@ -1,5 +1,3 @@
-using ProductManagement.Domain.Entities;
-
 namespace ProductManagement.Application.Contexts;
 
 public class UpdateProductContext
@@ -7,14 +5,14 @@ public class UpdateProductContext
     public Guid ProductId { get; init; }
     public string Name { get; init; }
     public string Description { get; init; }
-    public MeasurementUnit MeasurementUnit { get; init; }
+    public string MeasurementUnit { get; init; }
     public Guid RequesterId { get; init; }
 
     public UpdateProductContext(
         Guid productId,
         string name,
         string description,
-        MeasurementUnit measurementUnit,
+        string measurementUnit,
         Guid requesterId)
     {
         ProductId = productId;

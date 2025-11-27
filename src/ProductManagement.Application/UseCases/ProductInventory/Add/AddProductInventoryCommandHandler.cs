@@ -9,10 +9,14 @@ namespace ProductManagement.Application.UseCases.ProductInventory.Add;
 public class AddProductInventoryCommandHandler : ICommandHandler<AddProductInventoryCommand, GetProductResponse>
 {
     private readonly IProductService _productService;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public AddProductInventoryCommandHandler(IProductService productService)
+    public AddProductInventoryCommandHandler(
+        IProductService productService,
+        IUnitOfWork unitOfWork)
     {
         _productService = productService;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<GetProductResponse>> Handle(AddProductInventoryCommand request, CancellationToken cancellationToken)
@@ -27,6 +31,8 @@ public class AddProductInventoryCommandHandler : ICommandHandler<AddProductInven
         var product = await _productService.AddInventoryRecordAsync(context);
 
         if (product.IsFailure) return product.Error;
+
+        await _unitOfWork.SaveChangesAsync();
 
         var response = new GetProductResponse(product);
         

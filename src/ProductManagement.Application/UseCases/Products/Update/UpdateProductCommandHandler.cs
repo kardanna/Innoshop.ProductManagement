@@ -2,42 +2,38 @@ using ProductManagement.Application.Contexts;
 using ProductManagement.Application.Interfaces;
 using ProductManagement.Application.Messaging;
 using ProductManagement.Application.UseCases.Products.Get;
-using ProductManagement.Domain.Entities;
-using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 
 namespace ProductManagement.Application.UseCases.Products.Update;
 
 public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand, GetProductResponse>
 {
-    private readonly IProductOwnerService _ownerService;
     private readonly IProductService _productServcie;
+    private readonly IUnitOfWork _unitOfWork;
 
     public UpdateProductCommandHandler(
-        IProductOwnerService ownerService,
-        IProductService productServcie)
+        IProductService productServcie,
+        IUnitOfWork unitOfWork)
     {
-        _ownerService = ownerService;
         _productServcie = productServcie;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<GetProductResponse>> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
     {
-        var unit = MeasurementUnit.GetByName(request.MeasurementUnit);
-
-        if (unit is null) return DomainErrors.MeasurementUnit.UnknownUnit;
-
         var context = new UpdateProductContext(
             productId: request.ProductId,
             name: request.Name,
             description: request.Description,
-            measurementUnit: unit,
+            measurementUnit: request.MeasurementUnit,
             requesterId: request.RequesterId
         );
 
         var product = await _productServcie.UpdateAsync(context);
 
         if (product.IsFailure) return product.Error;
+
+        await _unitOfWork.SaveChangesAsync();
 
         var response = new GetProductResponse(product);
 
