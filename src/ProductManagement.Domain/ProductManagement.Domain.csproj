@@ -6,4 +6,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\Innoshop.Contracts\Innoshop.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>

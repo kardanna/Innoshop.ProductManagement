@@ -1,12 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.Products.Add;
 using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 using ProductManagement.Presentation.DTOs.Products;
+using Innoshop.Contracts.UserManagement.UserRoles;
+using ProductManagement.Presentation.Attributes;
 
 namespace ProductManagement.Presentation.Controllers.Products;
 
@@ -23,15 +24,8 @@ public class AddProductController : BaseApiController
         _logger = logger;
     }
 
-    [HttpGet("test")]
-    [Authorize]
-    public async Task<IActionResult> TestAuthentication()
-    {
-        return Ok();
-    }
-
     [HttpPost]
-    [Authorize(Roles = "Customer")]
+    [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> AddProduct([FromBody] AddProductRequest request)
     {
         var userId = HttpContext.User.Claims

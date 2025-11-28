@@ -1,13 +1,14 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.ProductInventory.Add;
 using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 using ProductManagement.Presentation.Controllers.Products;
 using ProductManagement.Presentation.DTOs.ProductInventory;
+using ProductManagement.Presentation.Attributes;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace ProductManagement.Presentation.Controllers.Inventory;
 
@@ -25,7 +26,7 @@ public class AddProductInventoryController : BaseApiController
     }
 
     [HttpPost]
-    [Authorize(Roles = "Customer")]
+    [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> AddInventory([FromBody] AddProductInventoryRequest request)
     {
         var userId = HttpContext.User.Claims

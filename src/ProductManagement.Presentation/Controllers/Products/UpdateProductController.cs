@@ -1,12 +1,13 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.Products.Update;
 using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
 using ProductManagement.Presentation.DTOs.Products;
+using ProductManagement.Presentation.Attributes;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace ProductManagement.Presentation.Controllers.Products;
 
@@ -24,7 +25,7 @@ public class UpdateProductController : BaseApiController
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Customer")]
+    [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> UpdateProduct([FromBody] UpdateProductRequest request, Guid id)
     {
         var userId = HttpContext.User.Claims

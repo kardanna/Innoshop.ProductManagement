@@ -1,11 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.JsonWebTokens;
 using ProductManagement.Application.UseCases.Products.Delete;
 using ProductManagement.Domain.Errors;
 using ProductManagement.Domain.Shared;
+using ProductManagement.Presentation.Attributes;
+using Innoshop.Contracts.UserManagement.UserRoles;
 
 namespace ProductManagement.Presentation.Controllers.Products;
 
@@ -23,7 +24,7 @@ public class DeleteProductController : BaseApiController
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Customer")]
+    [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> DeleteProduct(Guid id)
     {
         var userId = HttpContext.User.Claims
