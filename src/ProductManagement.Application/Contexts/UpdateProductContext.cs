@@ -1,6 +1,6 @@
 namespace ProductManagement.Application.Contexts;
 
-public class UpdateProductContext
+public record UpdateProductContext
 {
     public Guid ProductId { get; init; }
     public string Name { get; init; }

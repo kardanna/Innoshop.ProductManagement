@@ -1,6 +1,6 @@
 namespace ProductManagement.Application.Contexts;
 
-public class AddProductInventoryContext
+public record AddProductInventoryContext
 {
     public Guid ProductId { get; init; }
     public decimal Price { get; init; }

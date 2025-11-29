@@ -65,6 +65,10 @@ public class ProductPolicy : IProductPolicy
     {
         if (product.OwnerId != requesterId) return DomainErrors.Authentication.Unauthorized;
 
+        if (product.Owner.IsDeactivated) return DomainErrors.ProductOwner.Deactivated;
+
+        if (product.Owner.IsDeleted) return DomainErrors.ProductOwner.Deleted;
+
         return PolicyResult.Success;
     }
 }

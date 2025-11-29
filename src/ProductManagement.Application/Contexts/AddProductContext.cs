@@ -2,7 +2,7 @@ using ProductManagement.Domain.Entities;
 
 namespace ProductManagement.Application.Contexts;
 
-public class AddProductContext
+public record AddProductContext
 {
     public ProductOwner Owner { get; init; }
     public string Name { get; init; }
