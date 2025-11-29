@@ -12,16 +12,13 @@ public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
     private readonly IProductPolicy _productPolicy;
-    private readonly IUnitOfWork _unitOfWork;
 
     public ProductService(
         IProductRepository productRepository,
-        IProductPolicy productPolicy,
-        IUnitOfWork unitOfWork)
+        IProductPolicy productPolicy)
     {
         _productRepository = productRepository;
         _productPolicy = productPolicy;
-        _unitOfWork = unitOfWork;
     }
 
     public async Task<Result<Product>> AddAsync(AddProductContext context)
