@@ -1,19 +1,12 @@
 using FluentValidation;
-using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using ProductManagement.API.OptionsSetup;
-using ProductManagement.Application.Behaviours;
-using ProductManagement.Application.Interfaces;
-using ProductManagement.Application.Policies;
-using ProductManagement.Application.Repositories;
-using ProductManagement.Application.Services;
-using ProductManagement.Infrastructure.Messaging;
-using ProductManagement.Infrastructure.Messaging.Abstractions;
+using ProductManagement.Application;
+using ProductManagement.Infrastructure;
 using ProductManagement.Persistence;
-using ProductManagement.Persistence.Repositories;
+using ProductManagement.Presentation;
 using Serilog;
-using UserManagement.Presentation.ExceptionHandlers;
 
 namespace ProductManagement.API;
 
@@ -23,10 +16,26 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        builder.Services.AddControllers().AddApplicationPart(ProductManagement.Presentation.AssemblyReference.Assembly);;
-
         builder.Services.AddOpenApi();
 
+        //Policies, Services, PipelineBehaviour
+        builder.Services.AddProductManagementApplication();
+        
+        builder.Services.AddValidatorsFromAssembly(ProductManagement.Application.AssemblyReference.Assembly,
+            includeInternalTypes: true);
+        
+        builder.Services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssembly(ProductManagement.Application.AssemblyReference.Assembly));
+
+
+        //Messaging
+        builder.Services.AddProductManagementInfrastructure();
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
+        
+
+        //DbContext, UnitOfWork, Repositories
+        builder.Services.AddProductManagementPersistence();
         builder.Services.AddDbContext<ApplicationContext>(options =>
         {
             options.UseSqlServer(
@@ -34,53 +43,23 @@ public class Program
                 contextOptions =>
                 {
                     contextOptions.EnableRetryOnFailure(
-                        maxRetryCount: 10,
-                        maxRetryDelay: TimeSpan.FromSeconds(5),
+                        maxRetryCount: 6,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                     );
                 });
         });
-        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        //Scoped
-        builder.Services.AddScoped<IProductRepository, ProductRepository>();
-        builder.Services.AddScoped<IProductOwnerRepository, ProductOwnerRepository>();
-        builder.Services.AddScoped<IProductPolicy, ProductPolicy>();
-        builder.Services.AddScoped<IProductOwnerService, ProductOwnerService>();
-        builder.Services.AddScoped<IProductService, ProductService>();
 
-        //Singletons
-
-        //Scoped services
-
-        //Configure options
+        //AddControllers, GlobalExceptionHandler
+        builder.Services.AddProductManagementPresentation();
+        
+        
+        //Options
+        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
         builder.Services.ConfigureOptions<JwtOptionsSetup>();
         builder.Services.ConfigureOptions<JwtBearerOptionsSetup>();
 
-        //Hosted services
-
-        //RabbitMQ
-        builder.Services.ConfigureOptions<RabbitMQOptionsSetup>();
-        builder.Services.AddSingleton<RabbitMQConnectionProvider>();
-        builder.Services.AddSingleton<IRabbitMQConnectionProvider>(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConnectionProvider>());
-        builder.Services.AddSingleton<RabbitMQConfigurator>();
-        builder.Services.AddSingleton<IRabbitMQConfigurator>(sp => sp.GetRequiredService<RabbitMQConfigurator>());
-        builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQConfigurator>());
-        builder.Services.AddHostedService<RabbitMQConsumer>();
-
-        //Authentication configuration
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme);
-
-        //Validation behaviour
-        builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(PipelineValidationBehaviour<,>));
-        builder.Services.AddValidatorsFromAssembly(ProductManagement.Application.AssemblyReference.Assembly,
-            includeInternalTypes: true);
-        
-
-        //Global exception handler
-        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         //Logging 
         builder.Host.UseSerilog((context, loggerConfig) =>
@@ -88,13 +67,8 @@ public class Program
             loggerConfig.ReadFrom.Configuration(context.Configuration);
         });
 
-        //MediatR
-        builder.Services.AddMediatR(cfg =>
-            cfg.RegisterServicesFromAssembly(ProductManagement.Application.AssemblyReference.Assembly));
-
 
         var app = builder.Build();
-
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -112,6 +86,12 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+            db.Database.Migrate();
+        }
 
         app.Run();
     }

@@ -23,7 +23,7 @@ public class DeleteProductController : BaseApiController
         _logger = logger;
     }
 
-    [HttpPut("{id:guid}")]
+    [HttpDelete("{id:guid}")]
     [HasRole(nameof(Role.Customer))]
     public async Task<IActionResult> DeleteProduct(Guid id)
     {
