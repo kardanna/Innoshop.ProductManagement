@@ -5,7 +5,7 @@ using ProductManagement.Persistence;
 
 namespace ProductManagement.Application.IntegrationTests;
 
-public abstract class BaseIntegrationTest : IClassFixture<IntegrationTestWebAppFactory>
+public abstract class BaseIntegrationTest
 {
     private readonly IServiceScope _scope;
     protected readonly ISender _sender;

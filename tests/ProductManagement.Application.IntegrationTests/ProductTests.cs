@@ -9,6 +9,7 @@ using ProductManagement.Application.UseCases.Products.Update;
 
 namespace ProductManagement.Application.IntegrationTests;
 
+[Collection(IntegrationTestCollection.CollectionName)]
 public class ProductTests : BaseIntegrationTest
 {
     public ProductTests(IntegrationTestWebAppFactory factory)

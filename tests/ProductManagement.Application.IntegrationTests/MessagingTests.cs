@@ -9,6 +9,7 @@ using RabbitMQ.Client.Exceptions;
 
 namespace ProductManagement.Application.IntegrationTests;
 
+[Collection(IntegrationTestCollection.CollectionName)]
 public class MessagingTests : BaseIntegrationTest
 {
     public MessagingTests(IntegrationTestWebAppFactory factory)
