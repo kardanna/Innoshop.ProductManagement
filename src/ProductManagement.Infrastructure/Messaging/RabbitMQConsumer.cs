@@ -10,6 +10,7 @@ using ProductManagement.Domain.Shared;
 using ProductManagement.Infrastructure.Messaging.Abstractions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 namespace ProductManagement.Infrastructure.Messaging;
 
@@ -37,7 +38,6 @@ public class RabbitMQConsumer : IHostedService
         _logger = logger;
     }
 
-    //REFACTOR!!!!
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Fetching RabbitMQ connection...");
@@ -61,10 +61,17 @@ public class RabbitMQConsumer : IHostedService
 
             _logger.LogInformation("Closing the channel for consuming '{TopicName}' messages...", topicName);
 
-            if (consumerTag is not null) await channel.BasicCancelAsync(consumerTag, cancellationToken: cancellationToken);
-            if (channel is not null) await channel.CloseAsync(cancellationToken);
+            try
+            {
+                if (consumerTag is not null) await channel.BasicCancelAsync(consumerTag, cancellationToken: cancellationToken);
+                if (channel is not null) await channel.CloseAsync(cancellationToken);
 
-            _logger.LogInformation("Successfully closed the channel for consuming '{TopicName}' messages.", topicName);
+                _logger.LogInformation("Successfully closed the channel for consuming '{TopicName}' messages.", topicName);
+            }
+            catch (AlreadyClosedException ex)
+            {
+                _logger.LogError(ex, "Error occured while closing the channel for consuming '{TopicName}' messages.", topicName);
+            }
         }
     }
 
